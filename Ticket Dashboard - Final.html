@@ -1,0 +1,1349 @@
+<!DOCTYPE html>
+<html lang="vi" class="h-full">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Integrated Ticket Dashboard Prototype</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        /* General Styles */
+        body { font-family: 'Inter', sans-serif; transition: background-color 0.3s, color 0.3s; }
+        .loader { border: 4px solid #f3f3f3; border-top: 4px solid #3b82f6; border-radius: 50%; width: 24px; height: 24px; animation: spin 1s linear infinite; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        .notification { transition: opacity 0.5s ease, transform 0.5s ease; }
+        #main-content thead th { position: sticky; top: 0; z-index: 10; }
+
+        /* --- THEME STYLES --- */
+        /* Daylight Theme */
+        html.daylight body { background-color: #f9fafb; color: #374151; }
+        html.daylight h1, html.daylight h2, html.daylight h3 { color: #111827; }
+        html.daylight .bg-section, html.daylight .bg-popup-col { background-color: #ffffff; border-color: #e5e7eb; box-shadow: 0 1px 2px 0 rgb(0 0 0 / 0.05); }
+        html.daylight .bg-popup-main { background-color: #f3f4f6; }
+        html.daylight .bg-header-footer, html.daylight #main-content thead th { background-color: #e5e7eb; }
+        html.daylight .text-main { color: #374151; }
+        html.daylight .text-secondary { color: #6b7280; }
+        html.daylight .text-headings { color: #111827; }
+        html.daylight .border-main { border-color: #e5e7eb; }
+        html.daylight .border-secondary { border-color: #d1d5db; }
+        html.daylight .group-hover > td { background-color: rgba(243, 244, 246, 0.7) !important; }
+        html.daylight .bg-button { background-color: #e5e7eb; }
+        html.daylight .bg-button:hover { background-color: #d1d5db; }
+        html.daylight select, html.daylight input, html.daylight textarea { background-color: #f3f4f6; color: #1f2937; border-color: #d1d5db; }
+        html.daylight .theme-btn { color: #4b5563; }
+        html.daylight .theme-btn:hover { background-color: #e5e7eb; }
+        html.daylight .theme-btn.active { background-color: #2563eb; color: white; }
+        html.daylight .toolbar-btn { background-color: #8E44AD; color: white; }
+        html.daylight .btn-wizard { background-color: #46A1DD; color: white; }
+        html.daylight .btn-shipping { background-color: #28AF60; color: white; }
+        html.daylight .btn-history { background-color: #E5933A; color: white; }
+        html.daylight .btn-email { background-color: #FBBC04; color: #333; }
+        html.daylight .js-copy-btn { background-color: #d1d5db; }
+        html.daylight .js-copy-btn:hover { background-color: #9ca3af; }
+        
+        /* Dark Theme */
+        html.dark body { background-color: #111827; color: #d1d5db; }
+        html.dark h1, html.dark h2, html.dark h3 { color: #ffffff; }
+        html.dark .bg-section, html.dark .bg-popup-col { background-color: #1f2937; border-color: #374151; }
+        html.dark .bg-popup-main { background-color: #111827; }
+        html.dark .bg-header-footer, html.dark #main-content thead th { background-color: #374151; }
+        html.dark .text-main { color: #d1d5db; }
+        html.dark .text-secondary { color: #9ca3af; }
+        html.dark .text-headings { color: #f9fafb; }
+        html.dark .border-main { border-color: #374151; }
+        html.dark .border-secondary { border-color: #4b5563; }
+        html.dark .group-hover > td { background-color: rgba(55, 65, 81, 0.7) !important; }
+        html.dark .bg-button { background-color: #374151; }
+        html.dark .bg-button:hover { background-color: #4b5563; }
+        html.dark select, html.dark input, html.dark textarea { background-color: #374151; color: #d1d5db; border-color: #4b5563;}
+        html.dark .theme-btn.active { background-color: #2563eb; color: white; }
+        html.dark .toolbar-btn { background-color: #581c87; color: #e9d5ff; }
+        html.dark .btn-wizard { background-color: #2563eb; color: white; }
+        html.dark .btn-shipping { background-color: #059669; color: white; }
+        html.dark .btn-history { background-color: #d97706; color: white; }
+        html.dark .btn-email { background-color: #facc15; color: #422006; }
+        html.dark .js-copy-btn { background-color: #4b5563; }
+        html.dark .js-copy-btn:hover { background-color: #6b7280; }
+
+        /* Sunset Theme */
+        html.sunset body { background-color: #422006; color: #fed7aa; background-image: linear-gradient(to top, #b45309, #422006); }
+        html.sunset h1, html.sunset h2, html.sunset h3 { color: #fde68a; }
+        html.sunset .bg-section, html.sunset .bg-popup-col { background-color: #422006; border-color: #92400e; }
+        html.sunset .bg-popup-main { background-color: #422006; }
+        html.sunset .bg-header-footer, html.sunset #main-content thead th { background-color: #9a3412; }
+        html.sunset .text-main { color: #fed7aa; }
+        html.sunset .text-secondary { color: #fcd34d; }
+        html.sunset .text-headings { color: #fef3c7; }
+        html.sunset .border-main { border-color: #92400e; }
+        html.sunset .border-secondary { border-color: #b45309; }
+        html.sunset .group-hover > td { background-color: rgba(180, 83, 9, 0.3) !important; }
+        html.sunset .bg-button { background-color: #9a3412; color: #fed7aa; }
+        html.sunset .bg-button:hover { background-color: #b45309; }
+        html.sunset select, html.sunset input, html.sunset textarea { background-color: #78350f; color: #fed7aa; border-color: #9a3412; }
+        html.sunset .theme-btn { color: #fcd34d; }
+        html.sunset .theme-btn:hover { background-color: #9a3412; }
+        html.sunset .theme-btn.active { background-color: #f97316; color: white; }
+        html.sunset .toolbar-btn { background-color: #d97706; color: white; }
+        html.sunset .btn-wizard { background-color: #f59e0b; color: #422006; }
+        html.sunset .btn-shipping { background-color: #fb923c; color: #422006; }
+        html.sunset .btn-history { background-color: #fcd34d; color: #422006; }
+        html.sunset .btn-email { background-color: #fef3c7; color: #422006; }
+        html.sunset .js-copy-btn { background-color: #9a3412; }
+        html.sunset .js-copy-btn:hover { background-color: #b45309; }
+
+
+        /* Twilight Theme */
+        html.twilight body { background-image: linear-gradient(to bottom right, #1e1b4b, #0f172a); color: #cbd5e1; }
+        html.twilight h1, html.twilight h2, html.twilight h3 { color: #e2e8f0; }
+        html.twilight .bg-section, html.twilight .bg-popup-col { background-color: #1e293b; border-color: #334155; }
+        html.twilight .bg-popup-main { background-color: #0f172a; }
+        html.twilight .bg-header-footer, html.twilight #main-content thead th { background-color: #334155; }
+        html.twilight .text-main { color: #cbd5e1; }
+        html.twilight .text-secondary { color: #94a3b8; }
+        html.twilight .text-headings { color: #e2e8f0; }
+        html.twilight .border-main { border-color: #334155; }
+        html.twilight .border-secondary { border-color: #475569; }
+        html.twilight .group-hover > td { background-color: rgba(51, 65, 85, 0.7) !important; }
+        html.twilight .bg-button { background-color: #334155; }
+        html.twilight .bg-button:hover { background-color: #475569; }
+        html.twilight select, html.twilight input, html.twilight textarea { background-color: #334155; color: #cbd5e1; border-color: #475569;}
+        html.twilight .theme-btn { color: #94a3b8; }
+        html.twilight .theme-btn:hover { background-color: #475569; }
+        html.twilight .theme-btn.active { background-color: #4f46e5; color: white; }
+        html.twilight .project-tab[data-project-id] { background-color: #312e81 !important; color: #c7d2fe !important;}
+        html.twilight .project-tab.active { background-color: #4338ca !important; color: white !important; }
+        html.twilight #popup-issues-list button.bg-blue-600 { background-color: #4f46e5; }
+        html.twilight #copy-btn { background-color: #4f46e5; }
+        html.twilight #copy-btn:hover { background-color: #4338ca; }
+        html.twilight .js-template-btn { background-color: #4f46e5; }
+        html.twilight .js-template-btn:hover { background-color: #4338ca; }
+        html.twilight .toolbar-btn { background-color: #7c3aed; color: #ddd6fe; }
+        html.twilight .btn-wizard { background-color: #2563eb; color: white; }
+        html.twilight .btn-shipping { background-color: #16a34a; color: white; }
+        html.twilight .btn-history { background-color: #f59e0b; color: #1e293b; }
+        html.twilight .btn-email { background-color: #eab308; color: #1e293b; }
+        html.twilight .js-copy-btn { background-color: #475569; }
+        html.twilight .js-copy-btn:hover { background-color: #6b7280; }
+
+        /* Blossom Dawn Theme */
+        html.blossom-dawn body { background-color: #fff5f7; color: #5c2c3b; }
+        html.blossom-dawn h1, html.blossom-dawn h2, html.blossom-dawn h3 { color: #8c435a; }
+        html.blossom-dawn .bg-section, html.blossom-dawn .bg-popup-col { background-color: #ffe4e9; border-color: #fecdd3; }
+        html.blossom-dawn .bg-popup-main { background-color: #fff5f7; }
+        html.blossom-dawn .bg-header-footer, html.blossom-dawn #main-content thead th { background-color: #fed7dd; }
+        html.blossom-dawn .text-main { color: #5c2c3b; }
+        html.blossom-dawn .text-secondary { color: #8c435a; }
+        html.blossom-dawn .text-headings { color: #5c2c3b; }
+        html.blossom-dawn .border-main { border-color: #fecdd3; }
+        html.blossom-dawn .border-secondary { border-color: #fda4af; }
+        html.blossom-dawn .group-hover > td { background-color: rgba(254, 205, 211, 0.7) !important; }
+        html.blossom-dawn .bg-button { background-color: #ffe4e9; color: #8c435a; }
+        html.blossom-dawn .bg-button:hover { background-color: #fecdd3; }
+        html.blossom-dawn select, html.blossom-dawn input, html.blossom-dawn textarea { background-color: #fff5f7; color: #5c2c3b; border-color: #fecdd3; }
+        html.blossom-dawn .theme-btn { color: #8c435a; }
+        html.blossom-dawn .theme-btn:hover { background-color: #fecdd3; }
+        html.blossom-dawn .theme-btn.active { background-color: #f43f5e; color: white; }
+        html.blossom-dawn .toolbar-btn { background-color: #e11d48; color: white; }
+        html.blossom-dawn .btn-wizard { background-color: #ec4899; color: white; }
+        html.blossom-dawn .btn-shipping { background-color: #22c55e; color: white; }
+        html.blossom-dawn .btn-history { background-color: #f97316; color: white; }
+        html.blossom-dawn .btn-email { background-color: #facc15; color: #5c2c3b; }
+        html.blossom-dawn .js-copy-btn { background-color: #fecdd3; }
+        html.blossom-dawn .js-copy-btn:hover { background-color: #fda4af; }
+
+        /* Blue Sky Theme */
+        html.blue-sky body { background-color: #f0f9ff; color: #075985; }
+        html.blue-sky h1, html.blue-sky h2, html.blue-sky h3 { color: #0c4a6e; }
+        html.blue-sky .bg-section, html.blue-sky .bg-popup-col { background-color: #e0f2fe; border-color: #bae6fd; }
+        html.blue-sky .bg-popup-main { background-color: #f0f9ff; }
+        html.blue-sky .bg-header-footer, html.blue-sky #main-content thead th { background-color: #ccecfd; }
+        html.blue-sky .text-main { color: #075985; }
+        html.blue-sky .text-secondary { color: #0369a1; }
+        html.blue-sky .text-headings { color: #0c4a6e; }
+        html.blue-sky .border-main { border-color: #bae6fd; }
+        html.blue-sky .border-secondary { border-color: #7dd3fc; }
+        html.blue-sky .group-hover > td { background-color: rgba(186, 230, 253, 0.7) !important; }
+        html.blue-sky .bg-button { background-color: #e0f2fe; color: #0369a1; }
+        html.blue-sky .bg-button:hover { background-color: #bae6fd; }
+        html.blue-sky select, html.blue-sky input, html.blue-sky textarea { background-color: #f0f9ff; color: #075985; border-color: #bae6fd; }
+        html.blue-sky .theme-btn { color: #0369a1; }
+        html.blue-sky .theme-btn:hover { background-color: #bae6fd; }
+        html.blue-sky .theme-btn.active { background-color: #0ea5e9; color: white; }
+        html.blue-sky .toolbar-btn { background-color: #0284c7; color: white; }
+        html.blue-sky .btn-wizard { background-color: #0ea5e9; color: white; }
+        html.blue-sky .btn-shipping { background-color: #10b981; color: white; }
+        html.blue-sky .btn-history { background-color: #f59e0b; color: #0c4a6e; }
+        html.blue-sky .btn-email { background-color: #eab308; color: #0c4a6e; }
+        html.blue-sky .js-copy-btn { background-color: #bae6fd; }
+        html.blue-sky .js-copy-btn:hover { background-color: #7dd3fc; }
+
+        /* MODAL & TEMPLATE VIEWER STYLES */
+        .modal-backdrop { background-color: rgba(0, 0, 0, 0.6); transition: opacity 0.3s ease; }
+        .modal-content { transition: transform 0.3s ease, opacity 0.3s ease; }
+        .placeholder-tag { display: inline-block; padding: 2px 6px; border-radius: 4px; font-family: monospace; font-weight: 600; background-color: rgba(59, 130, 246, 0.2); color: #3B82F6; border: 1px solid transparent; }
+        html.dark .placeholder-tag { background-color: rgba(96, 165, 250, 0.2); color: #60A5FA; }
+        html.twilight .placeholder-tag { background-color: rgba(124, 58, 237, 0.2); color: #a78bfa; }
+        .project-tab.active { color: white; box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1); }
+    </style>
+</head>
+<body class="antialiased h-full">
+
+    <div id="app-wrapper" class="px-4 sm:px-6 lg:px-8 py-8 flex flex-col h-screen">
+        <div id="fixed-header" class="flex-shrink-0">
+            <header class="mb-8">
+                <div class="flex flex-wrap items-center justify-between gap-4">
+                    <div class="flex items-center gap-6">
+                        <h1 class="text-3xl font-bold text-headings">Ticket Dashboard</h1>
+                        <div id="theme-switcher" class="flex items-center gap-1 bg-section p-1 rounded-lg border border-secondary">
+                            <button data-theme="dark" class="theme-btn text-xs font-semibold py-1.5 px-3 rounded-md">Dark</button>
+                            <button data-theme="daylight" class="theme-btn text-xs font-semibold py-1.5 px-3 rounded-md">Daylight</button>
+                            <button data-theme="sunset" class="theme-btn text-xs font-semibold py-1.5 px-3 rounded-md">Sunset</button>
+                            <button data-theme="twilight" class="theme-btn text-xs font-semibold py-1.5 px-3 rounded-md">Twilight</button>
+                            <button data-theme="blossom-dawn" class="theme-btn text-xs font-semibold py-1.5 px-3 rounded-md">Blossom Dawn</button>
+                            <button data-theme="blue-sky" class="theme-btn text-xs font-semibold py-1.5 px-3 rounded-md">Blue Sky</button>
+                        </div>
+                    </div>
+                    <div class="flex items-center gap-4 bg-section p-3 rounded-lg border border-secondary">
+                        <label for="assignee-select" class="font-semibold text-secondary">Assignee:</label>
+                        <select id="assignee-select" class="border border-secondary text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5">
+                            <option value="">-- Toàn Bộ --</option>
+                        </select>
+
+                        <label for="vcn-agent-handler-select" class="font-semibold text-secondary ml-4">Người Làm:</label>
+                        <select id="vcn-agent-handler-select" class="border border-secondary text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5">
+                            <option value="">-- Chọn Người Làm --</option>
+                        </select>
+                    </div>
+                </div>
+            </header>
+
+            <div id="toolbar" class="mb-8 p-4 bg-section rounded-lg border border-main">
+                <h2 class="text-lg font-semibold text-headings mb-3">Công Cụ</h2>
+                <div id="toolbar-buttons" class="flex flex-wrap gap-2">
+                    <!-- Toolbar buttons will be injected here -->
+                </div>
+            </div>
+        </div>
+
+        <main id="main-content" class="flex-grow flex flex-col min-h-0">
+            <div id="message-area" class="fixed top-5 right-5 z-50 w-full max-w-xs"></div>
+            <div id="loader-container" class="fixed top-6 left-1/2 -translate-x-1/2 z-50 flex items-center gap-2 hidden">
+                <div class="loader"></div>
+                <span class="text-secondary font-medium">Đang tải...</span>
+            </div>
+
+            <div class="flex-grow overflow-auto bg-section rounded-lg border border-main">
+                <table class="w-full text-sm text-left text-main">
+                    <thead class="text-xs text-secondary uppercase bg-header-footer">
+                        <tr>
+                            <th scope="col" class="px-4 py-3 text-center">Start</th>
+                            <th scope="col" class="px-4 py-3 text-center">End</th>
+                            <th scope="col" class="px-6 py-3">Ticket</th>
+                            <th scope="col" class="px-6 py-3 text-center" style="min-width: 180px;">Ticket Status</th>
+                            <th scope="col" class="px-6 py-3">Issue Type</th>
+                            <th scope="col" class="px-6 py-3 text-center">Actions</th>
+                            <th scope="col" class="px-6 py-3">PO</th>
+                            <th scope="col" class="px-6 py-3">Item Number</th>
+                            <th scope="col" class="px-6 py-3">Order Status</th>
+                        </tr>
+                    </thead>
+                    <tbody id="ticket-table-body" class="divide-y-0"></tbody>
+                </table>
+            </div>
+        </main>
+    </div>
+
+    <!-- NEW 3-COLUMN TEMPLATE SELECTION MODAL -->
+    <div id="template-selection-modal" class="modal-backdrop fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center p-4 hidden z-40">
+        <div class="modal-content bg-popup-main rounded-lg shadow-xl w-full max-w-screen-2xl h-[95vh] flex flex-col transform scale-95 opacity-0">
+            <div class="flex justify-between items-center p-4 border-b border-main flex-shrink-0">
+                <h2 class="text-xl font-bold text-headings">Sử dụng Template</h2>
+                <button id="close-template-selection-modal" class="p-2 rounded-full hover:bg-gray-500/20 text-2xl leading-none">&times;</button>
+            </div>
+            <main class="grid grid-cols-1 lg:grid-cols-4 gap-4 p-4 flex-grow overflow-hidden">
+                <div class="lg:col-span-1 bg-popup-col p-4 rounded-lg flex flex-col overflow-y-auto">
+                     <div class="mb-4">
+                        <h3 class="text-lg font-bold mb-2 text-headings">Dự án</h3>
+                        <div id="popup-project-tabs-container" class="flex flex-wrap gap-2"></div>
+                    </div>
+                    <h3 class="text-lg font-bold mb-2 mt-4 text-headings">Danh mục chính</h3>
+                    <div id="popup-issues-list" class="space-y-1 flex-grow"></div>
+                </div>
+                <div class="lg:col-span-1 bg-popup-col p-4 rounded-lg flex flex-col overflow-y-auto">
+                    <div class="flex justify-between items-center mb-4">
+                        <h3 class="text-lg font-bold text-headings">Danh sách Mẫu</h3>
+                    </div>
+                    <input type="text" id="popup-search-input" placeholder="Tìm kiếm tất cả template..." class="w-full p-2 border border-secondary rounded-lg mb-4 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    <div id="popup-template-list" class="space-y-2 flex-grow"></div>
+                </div>
+                <div class="lg:col-span-2 bg-popup-col p-6 rounded-lg overflow-y-auto">
+                    <div id="popup-workspace">
+                        <div id="popup-welcome-screen" class="flex flex-col items-center justify-center h-full text-center">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-16 w-16 text-secondary mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
+                            <h3 class="text-2xl font-semibold text-headings">Chọn một mẫu</h3>
+                            <p class="text-secondary mt-2">Danh sách các mẫu phù hợp đã được lọc sẵn. Hãy chọn một mẫu từ cột giữa để bắt đầu.</p>
+                        </div>
+                        <div id="popup-template-viewer" class="hidden"></div>
+                    </div>
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <!-- WORKFLOW MODALS -->
+    <div id="validation-modal" class="modal-backdrop fixed inset-0 flex items-center justify-center p-4 hidden opacity-0 z-50">
+        <div class="modal-content bg-section rounded-lg shadow-xl w-full max-w-md p-6 transform scale-95"><h2 class="text-2xl font-bold mb-4 text-yellow-400">Cảnh báo</h2><p class="mb-4">Vui lòng điền đầy đủ các trường thông tin bắt buộc sau:</p><ul id="missing-fields-list" class="list-disc list-inside text-secondary mb-6"></ul><div class="flex justify-end"><button id="close-validation-modal-btn" class="bg-yellow-500 hover:bg-yellow-600 text-white font-bold py-2 px-4 rounded-lg">Đã hiểu</button></div></div>
+    </div>
+    <div id="customer-email-modal" class="modal-backdrop fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 hidden opacity-0 z-50">
+        <div class="modal-content bg-section rounded-lg shadow-xl w-full max-w-3xl p-6 transform scale-95">
+            <h2 class="text-2xl font-bold mb-4 text-rose-400">Nhắc nhở: Gửi Email cho Customer</h2>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div class="space-y-4">
+                    <div><label for="customer-email" class="block text-sm font-medium">Email Khách hàng</label><input type="email" id="customer-email" class="mt-1 w-full p-2 border border-secondary rounded-lg bg-button"></div>
+                    <div><label for="customer-name" class="block text-sm font-medium">Tên Khách hàng</label><input type="text" id="customer-name" class="mt-1 w-full p-2 border border-secondary rounded-lg bg-button"></div>
+                    <div><label for="customer-order" class="block text-sm font-medium">Số Đơn hàng</label><input type="text" id="customer-order" class="mt-1 w-full p-2 border border-secondary rounded-lg bg-button"></div>
+                    <div><label for="customer-brand" class="block text-sm font-medium">Brand</label><select id="customer-brand" class="mt-1 w-full p-2 border border-secondary rounded-lg bg-button"></select></div>
+                </div>
+                <div class="space-y-4">
+                     <h3 class="font-semibold">Xem trước Email:</h3>
+                    <div class="border border-secondary p-2 rounded-lg bg-button"><label class="block text-xs font-medium text-secondary mb-1">Email người nhận</label><div class="flex items-center gap-2"><p id="customer-email-address-output" class="flex-grow p-2 bg-section rounded-md text-sm truncate"></p><button class="js-copy-btn p-1.5 rounded-md" title="Sao chép Email"><svg class="w-4 h-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 17.25v3.375c0 .621-.504 1.125-1.125 1.125h-9.75a1.125 1.125 0 0 1-1.125-1.125V7.875c0-.621.504-1.125 1.125-1.125H6.75a9.06 9.06 0 0 1 1.5.124m7.5 10.376h3.375c.621 0 1.125-.504 1.125-1.125V11.25c0-4.46-3.243-8.161-7.5-8.876a9.06 9.06 0 0 0-1.5-.124H9.375c-.621 0-1.125.504-1.125 1.125v3.5m7.5 10.375H9.375a1.125 1.125 0 0 1-1.125-1.125v-9.25m12 12.25-3-3m0 0-3 3m3-3v7.5m-6-13.5H3.375c-.621 0-1.125.504-1.125 1.125v1.5c0 .621.504 1.125 1.125 1.125h3.75m0-3.75v.75" /></svg></button></div></div>
+                    <div class="border border-secondary p-2 rounded-lg bg-button"><label class="block text-xs font-medium text-secondary mb-1">Tiêu đề</label><div class="flex items-center gap-2"><p id="customer-email-subject-output" class="flex-grow p-2 bg-section rounded-md text-sm"></p><button class="js-copy-btn p-1.5 rounded-md" title="Sao chép Tiêu đề"><svg class="w-4 h-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 17.25v3.375c0 .621-.504 1.125-1.125 1.125h-9.75a1.125 1.125 0 0 1-1.125-1.125V7.875c0-.621.504-1.125 1.125-1.125H6.75a9.06 9.06 0 0 1 1.5.124m7.5 10.376h3.375c.621 0 1.125-.504 1.125-1.125V11.25c0-4.46-3.243-8.161-7.5-8.876a9.06 9.06 0 0 0-1.5-.124H9.375c-.621 0-1.125.504-1.125 1.125v3.5m7.5 10.375H9.375a1.125 1.125 0 0 1-1.125-1.125v-9.25m12 12.25-3-3m0 0-3 3m3-3v7.5m-6-13.5H3.375c-.621 0-1.125.504-1.125 1.125v1.5c0 .621.504 1.125 1.125 1.125h3.75m0-3.75v.75" /></svg></button></div></div>
+                    <div class="border border-secondary p-2 rounded-lg bg-button"><label class="block text-xs font-medium text-secondary mb-1">Nội dung</label><div class="relative"><div id="customer-email-body-output" class="w-full p-2 bg-section rounded-lg min-h-[150px] text-sm max-h-40 overflow-y-auto"></div><button class="js-copy-btn absolute top-1 right-1 p-1.5 rounded-md" title="Sao chép Nội dung"><svg class="w-4 h-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 17.25v3.375c0 .621-.504 1.125-1.125 1.125h-9.75a1.125 1.125 0 0 1-1.125-1.125V7.875c0-.621.504-1.125 1.125-1.125H6.75a9.06 9.06 0 0 1 1.5.124m7.5 10.376h3.375c.621 0 1.125-.504 1.125-1.125V11.25c0-4.46-3.243-8.161-7.5-8.876a9.06 9.06 0 0 0-1.5-.124H9.375c-.621 0-1.125.504-1.125 1.125v3.5m7.5 10.375H9.375a1.125 1.125 0 0 1-1.125-1.125v-9.25m12 12.25-3-3m0 0-3 3m3-3v7.5m-6-13.5H3.375c-.621 0-1.125.504-1.125 1.125v1.5c0 .621.504 1.125 1.125 1.125h3.75m0-3.75v.75" /></svg></button></div></div>
+                </div>
+            </div>
+            <div id="customer-copy-feedback" class="h-5 mt-2 text-sm text-green-500 font-medium opacity-0 transition-opacity">Đã sao chép!</div>
+            <div class="mt-6 flex justify-end gap-3"><button id="close-customer-modal-btn" class="bg-button hover:brightness-90 text-main font-bold py-2 px-4 rounded-lg">Đóng</button></div>
+        </div>
+    </div>
+    <div id="label-reminder-modal" class="modal-backdrop fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 hidden opacity-0 z-50">
+        <div class="modal-content bg-section rounded-lg shadow-xl w-full max-w-md p-6 transform scale-95"><h2 class="text-2xl font-bold mb-4 text-blue-400">Nhắc nhở</h2><p id="label-reminder-text" class="mb-6"></p><div class="flex justify-end"><button id="close-label-reminder-modal-btn" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg">OK</button></div></div>
+    </div>
+
+    <!-- Supabase Client -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script>
+        // =================================================================================
+        // == CONFIG & GLOBAL STATE ======================================================
+        // =================================================================================
+        const SUPABASE_URL = 'https://pfbxtbydrjcmqlrklsdr.supabase.co';
+        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBmYnh0YnlkcmpjbXFscmtsc2RyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTY5ODM2NDksImV4cCI6MjA3MjU1OTY0OX0.bOgnown0UZzstbnYfUSEImwaSGP6lg2FccRg-yDFTPU';
+
+        // DOM Elements
+        const assigneeSelect = document.getElementById('assignee-select');
+        const vcnAgentHandlerSelect = document.getElementById('vcn-agent-handler-select');
+        const ticketTableBody = document.getElementById('ticket-table-body');
+        const loaderContainer = document.getElementById('loader-container');
+        const messageArea = document.getElementById('message-area');
+        const themeSwitcher = document.getElementById('theme-switcher');
+        const templateSelectionModal = document.getElementById('template-selection-modal');
+        const closeTemplateSelectionModal = document.getElementById('close-template-selection-modal');
+        const popupProjectTabs = document.getElementById('popup-project-tabs-container');
+        const popupIssuesList = document.getElementById('popup-issues-list');
+        const popupTemplateList = document.getElementById('popup-template-list');
+        const popupWorkspace = document.getElementById('popup-workspace');
+        const popupWelcomeScreen = document.getElementById('popup-welcome-screen');
+        const popupTemplateViewer = document.getElementById('popup-template-viewer');
+        const popupSearchInput = document.getElementById('popup-search-input');
+
+        // Global State
+        let supabaseClient;
+        let ticketsMap = new Map();
+        let ticketStatuses = [];
+        let vcnAgents = [];
+        let allAgentsMap = new Map();
+        let allTemplates = [];
+        let allPlaceholders = [];
+        let allSignatures = [];
+        let allSettings = {};
+        let allProjects = [];
+        let messageTimeout;
+
+        // Popup State
+        let popupCurrentTicket = null;
+        let popupCurrentProject = null;
+        let popupCurrentIssue = null;
+        let popupCurrentTemplateId = null;
+
+        // =================================================================================
+        // == INITIALIZATION & DATA FETCHING =============================================
+        // =================================================================================
+        try {
+            supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+        } catch (error) {
+            console.error('Lỗi khởi tạo Supabase:', error.message);
+        }
+        
+        document.addEventListener('DOMContentLoaded', async () => {
+            initTheme();
+            initToolbar();
+            if (supabaseClient) {
+                await Promise.all([
+                    populateAssignees(),
+                    populateTicketStatuses(),
+                    populateVCNAgents(),
+                    fetchAllAdminData()
+                ]);
+                // Load saved filter selections from Local Storage after populating dropdowns
+                loadFilterSelections();
+                await fetchAndRenderTickets(); 
+            }
+            
+            // Event listeners
+            ticketTableBody.addEventListener('click', handleTableClick);
+            closeTemplateSelectionModal.addEventListener('click', closeTemplateSelectionModalHandler);
+            popupProjectTabs.addEventListener('click', handlePopupProjectClick);
+            popupIssuesList.addEventListener('click', handlePopupIssueClick);
+            popupTemplateList.addEventListener('click', handlePopupTemplateClick);
+            
+            // Update fetch trigger and save selection to Local Storage
+            assigneeSelect.addEventListener('change', () => {
+                localStorage.setItem('dashboard_assignee', assigneeSelect.value);
+                fetchAndRenderTickets();
+            });
+
+            // Save VCN agent selection to Local Storage
+            vcnAgentHandlerSelect.addEventListener('change', () => {
+                 localStorage.setItem('dashboard_vcn_agent', vcnAgentHandlerSelect.value);
+            });
+
+            popupSearchInput.addEventListener('input', (e) => renderPopupTemplateList(e.target.value.trim()));
+            themeSwitcher.addEventListener('click', (e) => {
+                if (e.target.matches('.theme-btn')) setTheme(e.target.dataset.theme);
+            });
+             document.getElementById('customer-email-modal').addEventListener('click', (e) => {
+                const copyBtn = e.target.closest('.js-copy-btn');
+                if (copyBtn) {
+                    const contentContainer = copyBtn.previousElementSibling;
+                    const textToCopy = contentContainer.dataset.plainText || contentContainer.textContent;
+                    copyPlainTextToClipboard(textToCopy, document.getElementById('customer-copy-feedback'));
+                }
+            });
+        });
+
+        async function fetchAllAdminData() {
+            try {
+                const [templates, placeholders, signatures, settings, projects] = await Promise.all([
+                    supabaseClient.from('templates').select('*, projects(name, id)'),
+                    supabaseClient.from('placeholders').select('*'),
+                    supabaseClient.from('signatures').select('*'),
+                    supabaseClient.from('settings').select('*'),
+                    supabaseClient.from('projects').select('*')
+                ]);
+                allTemplates = templates.data || [];
+                allPlaceholders = placeholders.data || [];
+                allSignatures = signatures.data || [];
+                allProjects = projects.data || [];
+                (settings.data || []).forEach(s => { allSettings[s.key] = s.value; });
+
+                const brandData = allPlaceholders.find(p => p.key === 'brand');
+                if (brandData && brandData.options) {
+                     document.getElementById('customer-brand').innerHTML = brandData.options.map(opt => `<option value="${opt.value}">${opt.text}</option>`).join('');
+                }
+
+            } catch (error) {
+                console.error("Lỗi khi tải dữ liệu admin:", error);
+                showMessage("Không thể tải dữ liệu cho template.", "error");
+            }
+        }
+        
+        // =================================================================================
+        // == DASHBOARD UI & LOGIC =========================================================
+        // =================================================================================
+        
+        function loadFilterSelections() {
+            const savedAssignee = localStorage.getItem('dashboard_assignee');
+            const savedAgentHandler = localStorage.getItem('dashboard_vcn_agent');
+
+            // Set the value if it exists in the dropdown
+            if (savedAssignee && assigneeSelect.querySelector(`option[value="${savedAssignee}"]`)) {
+                assigneeSelect.value = savedAssignee;
+            }
+            if (savedAgentHandler && vcnAgentHandlerSelect.querySelector(`option[value="${savedAgentHandler}"]`)) {
+                vcnAgentHandlerSelect.value = savedAgentHandler;
+            }
+        }
+
+        function initToolbar() {
+            const toolbarLinks = [
+                { name: 'PH', url: 'https://partners.wayfair.com/v/internal_landing/index' },
+                { name: 'SupHub', url: 'https://supporthub.service.csnzoo.com/projects/AOPS/queues' },
+                { name: 'SerHub', url: 'https://admin.wayfair.com/d/service-hub/tickets' },
+                { name: 'Re-Index', url: 'https://partners.wayfair.com/orders/admin' },
+                { name: 'EDI Resend', url: 'https://admin.wayfair.com/d/edsi-dispatch-ui' },
+                { name: 'Product Availability', url: 'https://admin.wayfair.com/d/scvt/inventory-management-system-ui/search' },
+                { name: 'Manage Supplier', url: 'https://admin.wayfair.com/supplier/addedit.php' },
+                { name: 'Infohub', url: 'https://infohub.corp.wayfair.com/display/GPS/Global+Dropship+Click+to+Ship+%28DSC2S%29+-+VCN' },
+                { name: 'Outbox', url: 'https://admin.wayfair.com/d/notifications/outbox/email' },
+                { name: 'Slack', url: 'https://wayfair.enterprise.slack.com/archives/C07KXBT6XQX' },
+                { name: 'OW', url: 'https://admin.wayfair.com/' },
+                { name: 'Cancel', url: 'https://admin.wayfair.com/v/oms/bulk_order_cancellation/index' },
+                { name: 'OM', url: 'https://partners.wayfair.com/order_management.php' },
+                { name: 'PO History', url: 'https://partners.wayfair.com/v/overpack/po_history/index?keyword=&keyword_type=0' },
+                { name: 'Fleet Insight', url: 'https://admin.wayfair.com/d/4sight/fleet-insight' },
+                { name: 'Pickups', url: 'https://partners.wayfair.com/v/overpack/new_pickup/index' },
+                { name: 'Load Search', url: 'https://admin.wayfair.com/v/fulfillment/load_search/index' },
+                { name: 'Magic tools', url: 'https://lookerstudio.google.com/u/0/reporting/1fa5e6bc-9b10-4ac5-81f2-d9b5e8328f12/page/KkNWF' },
+                { name: 'Manual Schedule Pickup', url: 'https://partners.wayfair.com/d/dispatch-command' },
+                { name: 'Tracking 1', url: 'https://www.17track.net/en' },
+                { name: 'Tracking 2', url: 'https://parcelsapp.com/en/tracking/' }
+            ];
+            const toolbarContainer = document.getElementById('toolbar-buttons');
+            toolbarContainer.innerHTML = toolbarLinks.map(link => 
+                `<a href="${link.url}" target="_blank" class="toolbar-btn text-xs hover:brightness-90 font-medium py-1.5 px-3 rounded-full transition-all duration-200">${link.name}</a>`
+            ).join('');
+        }
+
+        function setTheme(theme) {
+            document.documentElement.className = theme;
+            localStorage.setItem('theme', theme);
+            themeSwitcher.querySelectorAll('.theme-btn').forEach(btn => {
+                btn.classList.toggle('active', btn.dataset.theme === theme);
+            });
+            fetchAndRenderTickets(); // Re-render table to update status colors
+        }
+        function initTheme() { setTheme(localStorage.getItem('theme') || 'dark'); }
+        
+        function showMessage(message, type = 'info', duration = 3000) {
+            if (messageTimeout) clearTimeout(messageTimeout);
+            const messageDiv = document.createElement('div');
+            messageDiv.className = 'notification p-4 rounded-lg shadow-lg mb-2 text-sm font-medium border';
+            const theme = localStorage.getItem('theme') || 'dark';
+            
+            const colorConfig = {
+                success: { daylight: 'bg-green-100 text-green-800 border-green-300', dark: 'bg-green-900/80 text-green-200 border-green-700', sunset: 'bg-green-900/80 text-green-200 border-green-700', twilight: 'bg-green-900/80 text-green-200 border-green-700', 'blossom-dawn': 'bg-green-100 text-green-800 border-green-300', 'blue-sky': 'bg-green-100 text-green-800 border-green-300'},
+                error: { daylight: 'bg-red-100 text-red-800 border-red-300', dark: 'bg-red-900/80 text-red-200 border-red-700', sunset: 'bg-red-900/80 text-red-200 border-red-700', twilight: 'bg-red-900/80 text-red-200 border-red-700', 'blossom-dawn': 'bg-red-100 text-red-800 border-red-300', 'blue-sky': 'bg-red-100 text-red-800 border-red-300' },
+                info: { daylight: 'bg-blue-100 text-blue-800 border-blue-300', dark: 'bg-blue-900/80 text-blue-200 border-blue-700', sunset: 'bg-indigo-900/80 text-indigo-200 border-indigo-700', twilight: 'bg-blue-900/80 text-blue-200 border-blue-700', 'blossom-dawn': 'bg-pink-100 text-pink-800 border-pink-300', 'blue-sky': 'bg-blue-100 text-blue-800 border-blue-300' }
+            };
+            
+            const themeColors = (colorConfig[type] || colorConfig.info)[theme];
+            if(themeColors) messageDiv.classList.add(...themeColors.split(' '));
+            
+            messageDiv.textContent = message;
+            messageArea.appendChild(messageDiv);
+
+            if (duration > 0) {
+                messageTimeout = setTimeout(() => {
+                    messageDiv.style.opacity = '0';
+                    messageDiv.style.transform = 'translateY(-20px)';
+                    setTimeout(() => messageDiv.remove(), 500);
+                }, duration);
+            }
+        }
+
+        async function populateAssignees() {
+            if (!supabaseClient) return;
+            try {
+                const { data, error } = await supabaseClient.from('agent').select('agent_account, agent_name');
+                if (error) throw error;
+                assigneeSelect.innerHTML = '<option value="">-- Toàn Bộ --</option>';
+                data.forEach(agent => {
+                    allAgentsMap.set(agent.agent_account, agent.agent_name);
+                    const option = document.createElement('option');
+                    option.value = agent.agent_account;
+                    option.textContent = `${agent.agent_name} (${agent.agent_account})`;
+                    assigneeSelect.appendChild(option);
+                });
+            } catch (error) {
+                console.error('Lỗi khi lấy danh sách agent:', error);
+                showMessage('Không thể tải danh sách Assignee.', 'error');
+            }
+        }
+        async function populateTicketStatuses() {
+             if (!supabaseClient || ticketStatuses.length > 0) return;
+            try {
+                const { data, error } = await supabaseClient.from('ticket_status').select('id, status_name');
+                if (error) throw error;
+                ticketStatuses = data;
+            } catch (error) {
+                console.error('Lỗi khi lấy Ticket Statuses:', error);
+                showMessage('Không thể tải danh sách trạng thái ticket.', 'error');
+            }
+        }
+        async function populateVCNAgents() {
+             if (!supabaseClient || vcnAgents.length > 0) return;
+            try {
+                const { data, error } = await supabaseClient.from('vcn_agent').select('stt, name');
+                if (error) throw error;
+                vcnAgents = data;
+                vcnAgentHandlerSelect.innerHTML = '<option value="">-- Chọn Người Làm --</option>';
+                vcnAgents.forEach(agent => {
+                    const option = document.createElement('option');
+                    option.value = agent.stt;
+                    option.textContent = agent.name;
+                    vcnAgentHandlerSelect.appendChild(option);
+                });
+            } catch (error) {
+                console.error('Lỗi khi lấy VCN Agents:', error);
+                showMessage('Không thể tải danh sách VCN agent.', 'error');
+            }
+        }
+
+        async function fetchAndRenderTickets() { 
+            loaderContainer.classList.remove('hidden');
+            const currentData = ticketTableBody.innerHTML;
+            ticketTableBody.innerHTML = '';
+            try {
+                let query = supabaseClient.from('tickets').select('*').is('time_end', null);
+                const selectedAssignee = assigneeSelect.value;
+                if(selectedAssignee) query = query.eq('assignee_account', selectedAssignee);
+                const { data, error } = await query.order('id', { ascending: false });
+                if (error) throw error;
+                ticketsMap.clear();
+                data.forEach(ticket => ticketsMap.set(ticket.id, ticket));
+                if (data.length === 0) {
+                   showMessage(selectedAssignee ? `Không tìm thấy ticket.` : 'Không có ticket nào.', 'info', 1500);
+                } else {
+                    renderTable(data);
+                }
+            } catch (error) {
+                console.error('Lỗi khi lấy ticket:', error);
+                showMessage('Đã xảy ra lỗi khi tải dữ liệu ticket.', 'error');
+                ticketTableBody.innerHTML = currentData; // Restore old data on error
+            } finally {
+                loaderContainer.classList.add('hidden');
+            }
+        }
+
+        function renderTable(tickets) {
+            const groupedByPO = tickets.reduce((acc, ticket) => {
+                const poKey = ticket.po || `NO_PO_${ticket.id}`;
+                if (!acc[poKey]) acc[poKey] = [];
+                acc[poKey].push(ticket);
+                return acc;
+            }, {});
+
+            let html = '';
+            for (const poKey in groupedByPO) {
+                const items = groupedByPO[poKey];
+                const rowCount = items.length;
+                const firstItem = items[0];
+
+                items.forEach((item, index) => {
+                    html += `<tr data-ticket-id="${item.id}" data-po-group="${poKey}">`;
+
+                    if (index === 0) {
+                        html += `
+                            <td class="px-4 py-4 align-middle text-center border-b border-main" rowspan="${rowCount}">
+                                <button data-action="start" data-ticket-id="${firstItem.id}" class="p-2 rounded-full hover:bg-green-500/20 text-green-400"><svg class="w-4 h-4" xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16"><path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14m0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16"/><path d="M6.271 5.055a.5.5 0 0 1 .52.038l3.5 2.5a.5.5 0 0 1 0 .814l-3.5 2.5A.5.5 0 0 1 6 10.5v-5a.5.5 0 0 1 .271-.445z"/></svg></button>
+                            </td>
+                            <td class="px-4 py-4 align-middle text-center border-b border-main" rowspan="${rowCount}">
+                                <button data-action="end" data-ticket-id="${firstItem.id}" class="p-2 rounded-full hover:bg-red-500/20 text-red-400"><svg class="w-4 h-4" xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16"><path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14m0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16"/><path d="M5 6.5A1.5 1.5 0 0 1 6.5 5h3A1.5 1.5 0 0 1 11 6.5v3A1.5 1.5 0 0 1 9.5 11h-3A1.5 1.5 0 0 1 5 9.5v-3z"/></svg></button>
+                            </td>
+                            <td class="px-6 py-4 align-middle font-medium text-headings border-b border-main" rowspan="${rowCount}">${firstItem.ticket || ''}</td>
+                            <td class="px-6 py-4 align-middle border-b border-main" rowspan="${rowCount}">
+                                <select data-action="status-change" data-ticket-id="${firstItem.id}" class="border border-secondary text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2">
+                                    <option value="" selected>-- Chọn trạng thái --</option>
+                                    ${ticketStatuses.map(s => `<option value="${s.id}">${s.status_name}</option>`).join('')}
+                                </select>
+                            </td>
+                            <td class="px-6 py-4 align-middle border-b border-main" rowspan="${rowCount}">${firstItem.issue_type || ''}</td>
+                            <td class="px-6 py-4 text-center align-middle border-b border-main" rowspan="${rowCount}">${renderActionButtons(firstItem)}</td>
+                            <td class="px-6 py-4 align-middle border-b border-main" rowspan="${rowCount}">${firstItem.po || ''}</td>
+                        `;
+                    }
+                    html += `
+                        <td class="px-6 py-4 border-b border-main">${item.item_number || ''}</td>
+                        <td class="px-6 py-4 border-b border-main">${renderOrderStatus(item.status)}</td>
+                    </tr>`;
+                });
+            }
+            ticketTableBody.innerHTML = html;
+
+             // Add hover effect
+            document.querySelectorAll('tr[data-po-group]').forEach(row => {
+                row.addEventListener('mouseenter', (e) => {
+                    const poGroup = e.currentTarget.dataset.poGroup;
+                    document.querySelectorAll(`tr[data-po-group="${poGroup}"]`).forEach(groupRow => groupRow.classList.add('group-hover'));
+                });
+                row.addEventListener('mouseleave', (e) => {
+                    const poGroup = e.currentTarget.dataset.poGroup;
+                    document.querySelectorAll(`tr[data-po-group="${poGroup}"]`).forEach(groupRow => groupRow.classList.remove('group-hover'));
+                });
+            });
+        }
+
+        
+        function renderActionButtons(item) {
+            const orderWizardUrl = `https://admin.wayfair.com/wizards/orderwizard.php?OrID=${item.order_number || ''}`;
+            const updateShippingUrl = `https://admin.wayfair.com/wizards/shipping/update_shipping_info.php?OrID=${item.order_number || ''}&PoNum=${item.po_nocs || ''}`;
+            const orderHistoryUrl = `https://partners.wayfair.com/v/overpack/po_history/index?keyword=${item.po || ''}&keyword_type=0`;
+            const emailUrl = `https://supporthub.service.csnzoo.com/secure/com.metainf.jira.plugin.emailissue.action.EmailThisIssue!view.jspa?id=${item.issue_id || ''}`;
+
+            return `<div class="flex flex-col items-center gap-1.5">
+                        <div class="flex items-center gap-1.5">
+                            <a href="${orderWizardUrl}" target="_blank" title="Order Wizard" class="btn-wizard text-xs hover:brightness-90 font-medium py-1 px-2 rounded transition-all duration-200">Wizard</a>
+                            <a href="${updateShippingUrl}" target="_blank" title="Update Shipping" class="btn-shipping text-xs hover:brightness-90 font-medium py-1 px-2 rounded transition-all duration-200">Shipping</a>
+                            <a href="${orderHistoryUrl}" target="_blank" title="Order History" class="btn-history text-xs hover:brightness-90 font-medium py-1 px-2 rounded transition-all duration-200">History</a>
+                        </div>
+                        <div class="flex items-center gap-1.5">
+                            <a href="${emailUrl}" target="_blank" title="Email" class="btn-email text-xs hover:brightness-90 font-medium py-1 px-2 rounded transition-all duration-200">Email</a>
+                            <button data-action="template" data-ticket-id="${item.id}" class="js-template-btn text-xs bg-blue-600 hover:bg-blue-500 text-white font-medium py-1 px-2 rounded transition-all duration-200">Template</button>
+                        </div>
+                    </div>`;
+        }
+        
+        function renderOrderStatus(status) {
+            if (!status) {
+                return `<span class="whitespace-nowrap px-2 py-1 text-xs font-medium rounded-full bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300">N/A</span>`;
+            }
+            const theme = document.documentElement.className || 'dark';
+            const lowerStatus = status.toLowerCase();
+
+            const palettes = {
+                daylight: {
+                    delivered: 'bg-green-100 text-green-800 border border-green-200',
+                    pending: 'bg-blue-100 text-blue-800 border border-blue-200',
+                    backordered: 'bg-yellow-100 text-yellow-800 border border-yellow-200',
+                    cancelled: 'bg-red-100 text-red-800 border border-red-200',
+                    default: 'bg-gray-100 text-gray-800 border border-gray-200'
+                },
+                'blossom-dawn': {
+                    delivered: 'bg-green-200 text-green-900 border border-green-300',
+                    pending: 'bg-pink-200 text-pink-900 border border-pink-300',
+                    backordered: 'bg-yellow-200 text-yellow-900 border border-yellow-300',
+                    cancelled: 'bg-red-200 text-red-900 border border-red-300',
+                    default: 'bg-gray-200 text-gray-900 border border-gray-300'
+                },
+                 'blue-sky': {
+                    delivered: 'bg-green-200 text-green-900 border border-green-300',
+                    pending: 'bg-blue-200 text-blue-900 border border-blue-300',
+                    backordered: 'bg-yellow-200 text-yellow-900 border border-yellow-300',
+                    cancelled: 'bg-red-200 text-red-900 border border-red-300',
+                    default: 'bg-gray-200 text-gray-900 border border-gray-300'
+                },
+                dark: {
+                    delivered: 'bg-green-900/50 text-green-300 border border-green-700',
+                    pending: 'bg-blue-900/50 text-blue-300 border border-blue-700',
+                    backordered: 'bg-yellow-900/50 text-yellow-300 border border-yellow-700',
+                    cancelled: 'bg-red-900/50 text-red-300 border border-red-700',
+                    default: 'bg-gray-700 text-gray-300 border border-gray-600'
+                },
+                 sunset: {
+                    delivered: 'bg-green-900/50 text-green-300 border border-green-700',
+                    pending: 'bg-orange-900/50 text-orange-300 border border-orange-700',
+                    backordered: 'bg-yellow-900/50 text-yellow-300 border border-yellow-700',
+                    cancelled: 'bg-red-900/50 text-red-300 border border-red-700',
+                    default: 'bg-stone-800/50 text-stone-300 border border-stone-700'
+                },
+                twilight: {
+                    delivered: 'bg-emerald-900/50 text-emerald-300 border border-emerald-700',
+                    pending: 'bg-indigo-900/50 text-indigo-300 border border-indigo-700',
+                    backordered: 'bg-amber-900/50 text-amber-300 border border-amber-700',
+                    cancelled: 'bg-rose-900/50 text-rose-300 border border-rose-700',
+                    default: 'bg-slate-700 text-slate-300 border border-slate-600'
+                }
+            };
+            
+            const palette = palettes[theme] || palettes.dark;
+            
+            let colorClasses = palette.default;
+            if (lowerStatus.includes('delivered') || lowerStatus.includes('shipped')) colorClasses = palette.delivered;
+            else if (lowerStatus.includes('pending ship') || lowerStatus.includes('ready for pickup')) colorClasses = palette.pending;
+            else if (lowerStatus.includes('backordered')) colorClasses = palette.backordered;
+            else if (lowerStatus.includes('cancelled') || lowerStatus.includes('pending cancel')) colorClasses = palette.cancelled;
+            
+            return `<span class="whitespace-nowrap px-2 py-1 text-xs font-medium rounded-full ${colorClasses}">${status}</span>`;
+        }
+
+        async function handleTableClick(e) {
+            const target = e.target;
+            const button = target.closest('button[data-action]');
+            
+            if (button) {
+                const action = button.dataset.action;
+                const ticketId = parseInt(button.dataset.ticketId, 10);
+                const ticket = ticketsMap.get(ticketId);
+                const poKey = ticket.po || `NO_PO_${ticket.id}`;
+                const ticketsInGroup = Array.from(ticketsMap.values()).filter(t => (t.po || `NO_PO_${t.id}`) === poKey);
+                const ticketIdsInGroup = ticketsInGroup.map(t => t.id);
+
+                if (action === 'start') await handleGroupAction(button, ticketIdsInGroup, 'start');
+                if (action === 'end') await handleGroupAction(button, ticketIdsInGroup, 'end');
+                if (action === 'template') startTemplateWorkflow(ticket);
+            }
+        }
+
+        async function handleGroupAction(button, ticketIds, action) {
+             if (!supabaseClient) return;
+            const selectedAgentId = vcnAgentHandlerSelect.value;
+            if (action === 'start' && !selectedAgentId) {
+                return showMessage('Vui lòng chọn "Người Làm".', 'error');
+            }
+            
+            const firstTicketId = ticketIds[0];
+            const statusSelect = document.querySelector(`select[data-ticket-id="${firstTicketId}"][data-action="status-change"]`);
+            if (action === 'end' && !statusSelect.value) {
+                return showMessage('Vui lòng chọn trạng thái ticket.', 'error');
+            }
+
+            button.disabled = true;
+            const payload = {};
+            if (action === 'start') {
+                payload.agent_handle_ticket = parseInt(selectedAgentId, 10);
+                payload.time_start = new Date().toISOString();
+            } else if (action === 'end') {
+                payload.ticket_status_id = parseInt(statusSelect.value, 10);
+                payload.time_end = new Date().toISOString();
+            }
+
+            try {
+                const { error } = await supabaseClient.from('tickets').update(payload).in('id', ticketIds);
+                if (error) throw error;
+
+                showMessage(`Nhóm ticket đã được ${action === 'start' ? 'bắt đầu' : 'kết thúc'}.`, 'success');
+                
+                if (action === 'start') {
+                    button.classList.add('text-gray-500', 'cursor-not-allowed');
+                } else if (action === 'end') {
+                    const poGroup = ticketsMap.get(firstTicketId).po || `NO_PO_${firstTicketId}`;
+                    document.querySelectorAll(`tr[data-po-group="${poGroup}"]`).forEach(row => row.remove());
+                }
+            } catch(error) {
+                console.error(`Lỗi khi ${action} nhóm:`, error);
+                showMessage(`Không thể ${action} nhóm ticket.`, 'error');
+                button.disabled = false;
+            }
+        }
+        
+        const toTitleCase = (str) => str ? str.replace(/\w\S*/g, txt => txt.charAt(0).toUpperCase() + txt.substr(1).toLowerCase()) : '';
+        const hexToRgb = (hex) => { const r = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex); return r ? `${parseInt(r[1], 16)} ${parseInt(r[2], 16)} ${parseInt(r[3], 16)}` : null; };
+        
+        // =================================================================================
+        // == NEW TEMPLATE POPUP LOGIC =====================================================
+        // =================================================================================
+
+        function startTemplateWorkflow(ticketData) {
+            popupCurrentTicket = ticketData;
+            const matchingTemplate = allTemplates.find(t => t.issue?.toLowerCase() === ticketData.issue_type?.toLowerCase());
+            popupCurrentProject = matchingTemplate ? matchingTemplate.projects?.id : allProjects[0]?.id;
+            popupCurrentIssue = ticketData.issue_type;
+            
+            popupWelcomeScreen.classList.remove('hidden');
+            popupTemplateViewer.classList.add('hidden');
+            popupSearchInput.value = '';
+            
+            openTemplateSelectionModal();
+            renderPopupUI();
+        }
+
+        function renderPopupUI() {
+            renderPopupProjectTabs();
+            renderPopupIssuesList();
+            renderPopupTemplateList();
+        }
+        
+        function renderPopupProjectTabs() {
+            popupProjectTabs.innerHTML = allProjects.map(project => {
+                const isActive = project.id === popupCurrentProject;
+                const color = project.color || '#6B7280';
+                const style = isActive ? `background-color: ${color}; color: white;` : `background-color: rgba(${hexToRgb(color)}, 0.1); color: ${color};`;
+                return `<button data-project-id="${project.id}" class="project-tab font-bold py-2 px-4 rounded-lg transition-colors ${isActive ? 'active' : ''}" style="${style}">${project.name}</button>`;
+            }).join('');
+        }
+
+        function renderPopupIssuesList() {
+            if (!popupCurrentProject) {
+                popupIssuesList.innerHTML = '';
+                return;
+            };
+            const projectTemplates = allTemplates.filter(t => t.projects?.id === popupCurrentProject);
+            const issues = [...new Set(projectTemplates.map(t => t.issue))].sort((a,b) => a.localeCompare(b));
+            popupIssuesList.innerHTML = issues.map(issue => `<button data-issue-name="${issue}" class="w-full text-left p-2 rounded-md transition-colors text-main ${issue === popupCurrentIssue ? 'bg-blue-600 text-white font-semibold' : 'hover:bg-button'}">${issue}</button>`).join('');
+        }
+
+        function renderPopupTemplateList(searchTerm = '') {
+            let filteredTemplates = [];
+
+            if (searchTerm) {
+                const lowerCaseTerm = searchTerm.toLowerCase();
+                popupCurrentIssue = null; 
+                renderPopupIssuesList(); 
+                filteredTemplates = allTemplates
+                    .filter(t => t.name.toLowerCase().includes(lowerCaseTerm))
+                    .sort((a, b) => a.name.localeCompare(b.name));
+            } else {
+                if (!popupCurrentIssue) {
+                    popupTemplateList.innerHTML = `<p class="text-secondary text-center mt-4">Chọn một danh mục.</p>`;
+                    return;
+                }
+                filteredTemplates = allTemplates
+                    .filter(t => t.projects?.id === popupCurrentProject && t.issue === popupCurrentIssue)
+                    .sort((a,b) => a.name.localeCompare(b.name));
+            }
+
+            if(filteredTemplates.length === 0) {
+                 popupTemplateList.innerHTML = `<p class="text-secondary text-center mt-4">Không có mẫu nào.</p>`;
+                 return;
+            }
+            popupTemplateList.innerHTML = filteredTemplates.map(template => {
+                 return `<div class="template-item p-2 rounded-md hover:bg-button cursor-pointer" data-template-id="${template.id}">
+                            <span class="font-medium text-main">${template.name}</span>
+                        </div>`;
+            }).join('');
+        }
+
+        function handlePopupProjectClick(e) {
+            const button = e.target.closest('.project-tab');
+            if (button) {
+                popupCurrentProject = parseInt(button.dataset.projectId, 10);
+                popupCurrentIssue = null;
+                popupWelcomeScreen.classList.remove('hidden');
+                popupTemplateViewer.classList.add('hidden');
+                popupSearchInput.value = '';
+                renderPopupUI();
+            }
+        }
+        function handlePopupIssueClick(e) {
+            const button = e.target.closest('button');
+            if (button) {
+                popupCurrentIssue = button.dataset.issueName;
+                popupWelcomeScreen.classList.remove('hidden');
+                popupTemplateViewer.classList.add('hidden');
+                popupSearchInput.value = '';
+                renderPopupIssuesList();
+                renderPopupTemplateList();
+            }
+        }
+        function handlePopupTemplateClick(e) {
+             const item = e.target.closest('.template-item');
+             if(item) {
+                 popupCurrentTemplateId = item.dataset.templateId; 
+                 showTemplateViewer(popupCurrentTemplateId, popupCurrentTicket);
+             }
+        }
+        
+        async function showTemplateViewer(templateId, ticketData) {
+            const template = allTemplates.find(t => t.id === templateId);
+            if (!template) return;
+            
+            popupWelcomeScreen.classList.add('hidden');
+            popupTemplateViewer.innerHTML = `
+                <h3 id="viewer-title" class="text-2xl font-bold mb-2 text-headings"></h3>
+                <p id="viewer-category" class="text-sm text-secondary mb-4"></p>
+                <div class="mb-4 p-4 bg-button border border-secondary rounded-lg space-y-4">
+                    <div>
+                        <h4 class="font-semibold text-lg mb-2 text-blue-400">1. Thông tin Người nhận & Người gửi</h4>
+                        <div class="space-y-3 pl-2">
+                             <div>
+                                <label for="viewer-agent-name" class="block text-sm font-medium text-secondary">Tên riêng Người nhận</label>
+                                <input type="text" id="viewer-agent-name" class="mt-1 w-full p-2 border rounded-md">
+                            </div>
+                            <div>
+                                <label for="viewer-su-id" class="block text-sm font-medium text-secondary">Mã Nhà Cung Cấp (SuID)</label>
+                                <input type="text" id="viewer-su-id" class="mt-1 w-full p-2 border rounded-md">
+                            </div>
+                            <div id="viewer-manual-supplier-container" class="hidden">
+                                <label for="viewer-manual-supplier-name" class="block text-sm font-medium text-red-500">Không tìm thấy ID, nhập tên NCC</label>
+                                <input type="text" id="viewer-manual-supplier-name" class="mt-1 w-full p-2 border-red-500 rounded-md">
+                            </div>
+                        </div>
+                    </div>
+                    <div>
+                        <h4 class="font-semibold text-lg mb-2 text-blue-400">2. Tùy chỉnh Nội dung chính</h4>
+                        <div id="placeholders-container" class="space-y-4 pl-2"></div>
+                        <div id="optionals-container" class="mt-4 space-y-2 pl-2"></div>
+                        <div id="dynamic-optional-field-container" class="mt-4 space-y-3 pl-2"></div>
+                    </div>
+                </div>
+                <div class="mt-6">
+                    <div class="flex justify-between items-center mb-2">
+                        <h4 class="font-semibold text-lg text-headings">Nội dung cuối cùng</h4>
+                        <button id="copy-btn" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg flex items-center gap-2">
+                            Sao chép & Tiếp tục
+                        </button>
+                    </div>
+                    <div id="final-output" class="w-full p-4 border border-secondary rounded-lg bg-section min-h-[250px] whitespace-pre-wrap"></div>
+                    <div id="copy-feedback" class="mt-2 text-green-400 font-medium opacity-0">Đã sao chép!</div>
+                </div>`;
+            popupTemplateViewer.classList.remove('hidden');
+
+            document.getElementById('viewer-title').textContent = template.name;
+            document.getElementById('viewer-category').textContent = `Dự án: ${template.projects?.name || 'N/A'} / Danh mục: ${template.issue}`;
+            
+            const placeholderMap = new Map(allPlaceholders.map(p => [p.key, p]));
+
+            // Render logic for all placeholders including optional ones
+            renderAllPlaceholders(template, placeholderMap);
+            
+            // Auto-fill common fields
+            document.getElementById('viewer-su-id').value = ticketData.suid || '';
+            const supplierName = await findSupplierName(ticketData.suid);
+            document.getElementById('viewer-manual-supplier-container').classList.toggle('hidden', !supplierName);
+            if(supplierName) document.getElementById('viewer-manual-supplier-name').value = supplierName;
+            
+            // Auto-fill placeholders from ticket data
+            const prefillMapping = {
+                po: ticketData.po,
+                customer_name: (ticketData.customer || '').split(' ')[0],
+                order_number: ticketData.order_number,
+                item_number: ticketData.item_number
+            };
+
+            for (const key in prefillMapping) {
+                const inputs = popupTemplateViewer.querySelectorAll(`[data-placeholder-key="${key}"]`);
+                inputs.forEach(input => {
+                    if (input && prefillMapping[key]) input.value = prefillMapping[key];
+                });
+            }
+
+            popupTemplateViewer.querySelectorAll('input, select, textarea').forEach(el => el.addEventListener('input', updateFinalOutput));
+            document.getElementById('copy-btn').addEventListener('click', handleCopyAndContinue);
+            updateFinalOutput();
+        }
+
+        function renderAllPlaceholders(template, placeholderMap) {
+            const placeholdersContainer = document.getElementById('placeholders-container');
+            const optionalsContainer = document.getElementById('optionals-container');
+            const dynamicOptionalsContainer = document.getElementById('dynamic-optional-field-container');
+
+            placeholdersContainer.innerHTML = '';
+            optionalsContainer.innerHTML = '';
+            dynamicOptionalsContainer.innerHTML = '';
+            
+            const content = template.content || '';
+            const ignoredPlaceholders = new Set(['signature', 'Customer_Name', 'Order_Number', 'Brand']);
+
+            const createPlaceholderInput = (pKey) => {
+                const placeholderData = placeholderMap.get(pKey.toLowerCase());
+                const div = document.createElement('div');
+                div.className = "flex flex-col";
+                let fieldHtml;
+                const type = placeholderData ? placeholderData.type : 'entry';
+                const inputClass = "w-full mt-1 p-2 border rounded-md";
+                switch (type) {
+                    case 'droplist':
+                        fieldHtml = `<select data-placeholder-key="${pKey}" class="${inputClass}">${(placeholderData.options || []).map(opt => `<option value="${opt.value}">${opt.text || opt.value}</option>`).join('')}</select>`;
+                        break;
+                    case 'date':
+                        fieldHtml = `<input type="date" data-placeholder-key="${pKey}" class="${inputClass}">`;
+                        break;
+                    default:
+                        fieldHtml = `<input type="text" data-placeholder-key="${pKey}" class="${inputClass}">`;
+                }
+                div.innerHTML = `<label class="block text-sm font-medium text-secondary">${pKey.replace(/_/g, ' ')}</label>${fieldHtml}`;
+                return div;
+            };
+
+            const baseContent = content.replace(/\[\[(.*?)\]\]([\s\S]*?)\[\[\/\1\]\]/g, '');
+            const basePlaceholders = [...new Set(Array.from(baseContent.matchAll(/\{\{([a-zA-Z0-9_]+)\}\}/g), m => m[1]))]
+                .filter(p => !ignoredPlaceholders.has(p) && !p.startsWith('hom_nay'));
+            basePlaceholders.forEach(pKey => placeholdersContainer.appendChild(createPlaceholderInput(pKey)));
+
+            const optionalBlockRegex = /\[\[(.*?)\]\]([\s\S]*?)\[\[\/\1\]\]/g;
+            let match;
+            while ((match = optionalBlockRegex.exec(content)) !== null) {
+                const [, optionalName, optionalContent] = match;
+                const optionalContainer = document.createElement('div');
+                optionalContainer.className = 'mb-2';
+                const checkboxId = `opt-${optionalName.replace(/\s/g, '-')}-${Math.random()}`;
+                
+                const nestedPlaceholdersDiv = document.createElement('div');
+                nestedPlaceholdersDiv.className = 'nested-placeholders pl-6 mt-2 border-l-2 border-dashed border-secondary';
+                const nestedPlaceholders = [...new Set(Array.from(optionalContent.matchAll(/\{\{([a-zA-Z0-9_]+)\}\}/g), m => m[1]))]
+                     .filter(p => !ignoredPlaceholders.has(p) && !p.startsWith('hom_nay'));
+                nestedPlaceholders.forEach(pKey => nestedPlaceholdersDiv.appendChild(createPlaceholderInput(pKey)));
+
+                optionalContainer.innerHTML = `<div class="flex items-center"><input type="checkbox" id="${checkboxId}" data-optional-name="${optionalName}" checked class="h-4 w-4 text-blue-600 border-secondary rounded"><label for="${checkboxId}" class="ml-2 block text-sm">${optionalName}</label></div>`;
+                if (nestedPlaceholdersDiv.children.length === 0) nestedPlaceholdersDiv.classList.add('hidden');
+                optionalContainer.appendChild(nestedPlaceholdersDiv);
+                optionalsContainer.appendChild(optionalContainer);
+
+                optionalContainer.querySelector('input').addEventListener('change', (e) => {
+                    nestedPlaceholdersDiv.classList.toggle('hidden', !e.target.checked);
+                    updateFinalOutput();
+                });
+            }
+
+            if (template.hasOptionalField && template.optionalFieldNames) {
+                const optionalFields = template.optionalFieldNames.split(',').map(s => s.trim()).filter(Boolean);
+                if (optionalFields.length > 0) {
+                    const title = document.createElement('h5');
+                    title.className = 'font-semibold text-secondary';
+                    title.textContent = 'Trường tùy chọn:';
+                    dynamicOptionalsContainer.appendChild(title);
+                }
+                optionalFields.forEach(fieldName => {
+                    const div = document.createElement('div');
+                    const checkboxId = `dyn-opt-check-${fieldName}`;
+                    div.innerHTML = `
+                        <div class="flex items-center">
+                            <input type="checkbox" id="${checkboxId}" data-optional-name="${fieldName}" class="h-4 w-4 text-blue-600 border-secondary rounded">
+                            <label for="${checkboxId}" class="ml-2 block text-sm font-medium">${fieldName.replace(/_/g, ' ')}</label>
+                        </div>
+                        <textarea data-placeholder-key="${fieldName}" class="hidden mt-2 w-full p-2 border rounded-md" rows="3"></textarea>`;
+                    dynamicOptionalsContainer.appendChild(div);
+                    const checkbox = div.querySelector(`#${checkboxId}`);
+                    const textarea = div.querySelector('textarea');
+                    checkbox.addEventListener('change', () => {
+                        textarea.classList.toggle('hidden', !checkbox.checked);
+                        updateFinalOutput();
+                    });
+                });
+            }
+        }
+
+        function updateFinalOutput() {
+            const template = allTemplates.find(t => t.id === popupCurrentTemplateId);
+            if (!template) return;
+            
+            const agentName = document.getElementById('viewer-agent-name').value.trim();
+            const manualSupplierName = document.getElementById('viewer-manual-supplier-name').value.trim();
+            
+            let greeting = '';
+            if (agentName) {
+                greeting = (allSettings.greeting_person?.value || 'Hi {{name}},').replace('{{name}}', toTitleCase(agentName));
+            } else if (manualSupplierName) {
+                greeting = (allSettings.greeting_team?.value || 'Hi {{name}} Team,').replace('{{name}}', cleanSupplierName(manualSupplierName));
+            }
+            
+            let content = template.content || '';
+            
+            // Process optional sections
+            document.querySelectorAll('[data-optional-name]').forEach(checkbox => {
+                if (!checkbox.checked) {
+                    const name = checkbox.dataset.optionalName;
+                    const regex = new RegExp(`\\[\\[${name}\\]\\][\\s\\S]*?\\[\\[\\/${name}\\]\\]`, 'g');
+                    content = content.replace(regex, '');
+                }
+            });
+            content = content.replace(/\[\[\/?.*?\]\]/g, ''); // Clean up any remaining tags
+
+            content = replacePlaceholdersInText(content);
+            const footerText = (template.includeFooter && allSettings.footer_text?.value) ? allSettings.footer_text.value : '';
+
+            const assigneeAccount = popupCurrentTicket.assignee_account;
+            const assigneeName = allAgentsMap.get(assigneeAccount);
+            const signature = allSignatures.find(s => s.name === assigneeName) || allSignatures.find(s => s.isDefault) || allSignatures[0];
+            let signatureText = signature ? `${signature.name}\n${signature.title || ''}\n${signature.department || ''}`.trim() : '';
+            
+            let finalPlainText = `${greeting ? greeting + '\n\n' : ''}${content}${footerText ? `\n\n${footerText}` : ''}\n\nBest regards,\n${signatureText}`;
+
+            const finalOutput = document.getElementById('final-output');
+            finalOutput.innerHTML = formatTextForDisplay(finalPlainText, footerText);
+            finalOutput.dataset.plainText = finalPlainText;
+        }
+
+        function replacePlaceholdersInText(text, isForCustomer = false) {
+             if (!text) return '';
+             let processedText = text;
+             
+             if (isForCustomer) {
+                 const replacements = {
+                    Customer_Name: document.getElementById('customer-name').value,
+                    Order_Number: document.getElementById('customer-order').value,
+                    Brand: document.getElementById('customer-brand').value,
+                 };
+                 processedText = processedText.replace(/\{\{(.*?)\}\}/g, (_, key) => replacements[key] || `{{${key}}}`);
+             } else {
+                 const viewer = document.getElementById('popup-template-viewer');
+                 if(!viewer) return text;
+
+                 viewer.querySelectorAll('[data-placeholder-key]').forEach(input => {
+                    const key = input.dataset.placeholderKey;
+                    let value = input.value;
+                    if (input.type === 'date' && value) {
+                        const [year, month, day] = value.split('-');
+                        value = `${month}/${day}/${year}`;
+                    }
+                    const regex = new RegExp(`\\{\\{${key}\\}\\}`, 'g');
+                    processedText = processedText.replace(regex, value);
+                 });
+             }
+             return processedText;
+        }
+        
+        function formatTextForDisplay(plainText, footerText) {
+            const escapeHTML = (str) => str.replace(/[&<>"']/g, (match) => ({'&': '&amp;','<': '&lt;','>': '&gt;','"': '&quot;',"'": '&#39;'}[match]));
+            let processedPlainText = plainText.replace(/(https?:\/\/[^\s]+)([^\s])/g, '$1 $2');
+            let html = escapeHTML(processedPlainText).replace(/\n/g, '<br>');
+            if (footerText) {
+                const escapedFooter = escapeHTML(footerText).replace(/\n/g, '<br>');
+                html = html.replace(escapedFooter, `<i>${escapedFooter}</i>`);
+            }
+            const urlRegex = /(https?:\/\/[^\s<>"']+)/g;
+            return html.replace(urlRegex, `<a href="$1" target="_blank" class="text-blue-500 hover:underline">$1</a>`);
+        }
+
+        async function handleCopyAndContinue() {
+            if (!validatePlaceholders()) return;
+
+            const finalOutput = document.getElementById('final-output');
+            copyRichTextToClipboard(finalOutput);
+
+            closeTemplateSelectionModalHandler();
+            const template = allTemplates.find(t => t.id === popupCurrentTemplateId);
+            if (!template) return;
+            
+            setTimeout(async () => {
+                if (template.sendToCustomer) await openCustomerEmailModal(template);
+                if (template.addLabelReminder && template.labelName) await openLabelReminderModal(template.labelName);
+            }, 400); 
+        }
+        
+        function validatePlaceholders() {
+            const missingFields = [];
+            const viewer = document.getElementById('popup-template-viewer');
+            
+            if (!document.getElementById('viewer-agent-name').value.trim() && !document.getElementById('viewer-manual-supplier-name').value.trim()) {
+                missingFields.push('Tên riêng Người nhận hoặc Tên NCC');
+            }
+
+            viewer.querySelectorAll('[data-placeholder-key]').forEach(input => {
+                const isVisible = input.offsetParent !== null;
+                if (isVisible && !input.value.trim()) {
+                    const label = viewer.querySelector(`label[for="${input.id}"]`);
+                    missingFields.push(label ? label.textContent : input.dataset.placeholderKey);
+                }
+            });
+
+            if (missingFields.length > 0) {
+                const modal = document.getElementById('validation-modal');
+                document.getElementById('missing-fields-list').innerHTML = [...new Set(missingFields)].map(f => `<li>${f}</li>`).join('');
+                _openModal(modal);
+                document.getElementById('close-validation-modal-btn').onclick = () => _closeModal(modal);
+                return false;
+            }
+            return true;
+        }
+
+        function copyRichTextToClipboard(element) {
+            const plainText = element.dataset.plainText || element.innerText;
+            const listener = (e) => {
+                e.preventDefault();
+                e.clipboardData.setData('text/html', element.innerHTML);
+                e.clipboardData.setData('text/plain', plainText);
+            };
+            document.addEventListener('copy', listener);
+            try {
+                document.execCommand('copy');
+                const feedback = document.getElementById('copy-feedback');
+                if (feedback) { 
+                    feedback.classList.remove('opacity-0');
+                    setTimeout(() => feedback.classList.add('opacity-0'), 2000);
+                }
+            } catch (e) {
+                console.error('Lỗi khi sao chép:', e);
+                showMessage('Sao chép thất bại.', 'error');
+            } finally {
+                document.removeEventListener('copy', listener);
+            }
+        }
+        
+        function cleanSupplierName(name) {
+            if (!name) return '';
+            return name.replace(/^(US_|CAN_|\(US\)|\(CAN\))/i, '').trim();
+        }
+
+        async function findSupplierName(suid) {
+            if (!suid) return null;
+            let parentSuid = suid; // Assume the provided suid is the parent by default
+
+            try {
+                // Step 1: ALWAYS check the 'children' table first.
+                const { data: childData, error: childError } = await supabaseClient
+                    .from('children')
+                    .select('parentSuid')
+                    .eq('suchildid', suid)
+                    .single();
+
+                // If a child record is found, use its parentSuid.
+                if (childData) {
+                    parentSuid = childData.parentSuid;
+                }
+                
+                // Step 2: Now, use the determined parentSuid to find the supplier name.
+                const { data: supplierData, error: supplierError } = await supabaseClient
+                    .from('suppliers')
+                    .select('suname')
+                    .eq('suid', parentSuid)
+                    .single();
+                
+                if (supplierError && supplierError.code !== 'PGRST116') { // Ignore "exact one row" error if no parent found
+                    console.error('Error fetching supplier name for suid:', parentSuid, supplierError);
+                    return null;
+                }
+
+                return supplierData ? cleanSupplierName(supplierData.suname) : null;
+
+            } catch (error) {
+                console.error('An unexpected error occurred in findSupplierName for suid:', suid, error);
+                return null;
+            }
+        }
+
+        // --- Workflow Modals ---
+        function _openModal(modal) { modal.classList.remove('hidden'); setTimeout(() => { modal.classList.remove('opacity-0'); modal.querySelector('.modal-content').classList.remove('scale-95'); }, 10); };
+        function _closeModal(modal) { modal.classList.add('opacity-0'); modal.querySelector('.modal-content').classList.add('scale-95'); setTimeout(() => modal.classList.add('hidden'), 300); };
+        
+        function openCustomerEmailModal(template) {
+            return new Promise(resolve => {
+                const modal = document.getElementById('customer-email-modal');
+                const emailInput = document.getElementById('customer-email');
+                const nameInput = document.getElementById('customer-name');
+                const orderInput = document.getElementById('customer-order');
+                const brandSelect = document.getElementById('customer-brand');
+                
+                emailInput.value = popupCurrentTicket.customer_contact || '';
+                nameInput.value = (popupCurrentTicket.customer || '').split(' ')[0];
+                orderInput.value = popupCurrentTicket.order_number || '';
+                
+                const updatePreview = () => {
+                    let subject = replacePlaceholdersInText(template.customerSubject || '', true);
+                    let body = replacePlaceholdersInText(template.customerBody || '', true);
+                    
+                     const subjectOutput = document.getElementById('customer-email-subject-output');
+                     const bodyOutput = document.getElementById('customer-email-body-output');
+                     const emailOutput = document.getElementById('customer-email-address-output');
+                     
+                     subjectOutput.textContent = subject;
+                     subjectOutput.dataset.plainText = subject;
+
+                     bodyOutput.innerHTML = body.replace(/\n/g, '<br>');
+                     bodyOutput.dataset.plainText = body;
+
+                     emailOutput.textContent = emailInput.value;
+                     emailOutput.dataset.plainText = emailInput.value;
+                };
+                
+                modal.querySelectorAll('input, select').forEach(el => el.addEventListener('input', updatePreview));
+                updatePreview();
+                
+                _openModal(modal);
+                document.getElementById('close-customer-modal-btn').onclick = () => { _closeModal(modal); resolve(); };
+            });
+        }
+        function openLabelReminderModal(label) {
+            return new Promise(resolve => {
+                 const modal = document.getElementById('label-reminder-modal');
+                 document.getElementById('label-reminder-text').textContent = `Đừng quên thêm nhãn "${label}" vào ticket!`;
+                 _openModal(modal);
+                 document.getElementById('close-label-reminder-modal-btn').onclick = () => { _closeModal(modal); resolve(); };
+            });
+        }
+        function copyPlainTextToClipboard(text, feedbackElement) {
+            navigator.clipboard.writeText(text).then(() => {
+                if (feedbackElement) {
+                    feedbackElement.classList.remove('opacity-0');
+                    setTimeout(() => feedbackElement.classList.add('opacity-0'), 2000);
+                }
+            });
+        }
+
+
+        // Modal Controls
+        function openTemplateSelectionModal() {
+            templateSelectionModal.classList.remove('hidden');
+            setTimeout(() => templateSelectionModal.querySelector('.modal-content').classList.remove('scale-95', 'opacity-0'), 10);
+        }
+        function closeTemplateSelectionModalHandler() {
+            const content = templateSelectionModal.querySelector('.modal-content');
+            content.classList.add('scale-95', 'opacity-0');
+            setTimeout(() => templateSelectionModal.classList.add('hidden'), 300);
+        }
+        
+    </script>
+</body>
+</html>
+
