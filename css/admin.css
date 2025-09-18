@@ -1,4 +1,3 @@
-<style>
         :root {
             --color-bg-primary: 255 255 255;
             --color-bg-secondary: 249 250 251;
@@ -44,4 +43,3 @@
         #component-panel .component-item { cursor: pointer; padding: 0.5rem; background-color: rgb(var(--color-bg-secondary)); border: 1px solid rgb(var(--color-border)); border-radius: 0.375rem; font-size: 0.875rem; text-align: center; transition: background-color 0.2s; user-select: none; display: flex; align-items: center; gap: 0.5rem; justify-content: center; }
         #component-panel .component-item:hover { background-color: rgb(var(--color-bg-accent)); border-color: rgb(var(--color-accent-primary)); }
         .placeholder-tag { display: inline-block; padding: 2px 6px; border-radius: 4px; font-family: monospace; font-weight: 600; background-color: rgba(var(--color-accent-primary), 0.2); color: rgb(var(--color-accent-primary)); border: 1px solid transparent; }
-    </style>
