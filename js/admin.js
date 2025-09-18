@@ -1,4 +1,3 @@
-<script>
         // --- Supabase Client Setup ---
         const SUPABASE_URL = 'https://pfbxtbydrjcmqlrklsdr.supabase.co';
         const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBmYnh0YnlkcmpjbXFscmtsc2RyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTY5ODM2NDksImV4cCI6MjA3MjU1OTY0OX0.bOgnown0UZzstbnYfUSEImwaSGP6lg2FccRg-yDFTPU';
@@ -1004,4 +1003,3 @@ function createGuideStepEditor(type, stepData = {}) {
 
             initializeApp();
         });
-    </script>
